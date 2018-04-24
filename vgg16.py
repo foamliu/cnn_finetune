@@ -3,6 +3,7 @@
 from keras.models import Sequential
 from keras.optimizers import SGD
 from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras import backend as K
 
 from sklearn.metrics import log_loss
 
@@ -23,7 +24,12 @@ def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
       num_classes - number of categories for our classification task
     """
     model = Sequential()
-    model.add(ZeroPadding2D((1, 1), input_shape=(channel, img_rows, img_cols)))
+    if K.image_dim_ordering() == 'th':
+        # for Theano backend
+        model.add(ZeroPadding2D((1, 1), input_shape=(channel, img_rows, img_cols)))
+    else:
+        # for Tensorflow backend
+        model.add(ZeroPadding2D((1, 1), input_shape=(img_rows, img_cols, channel)))
     model.add(Convolution2D(64, 3, 3, activation='relu'))
     model.add(ZeroPadding2D((1, 1)))
     model.add(Convolution2D(64, 3, 3, activation='relu'))
@@ -68,7 +74,12 @@ def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
     model.add(Dense(1000, activation='softmax'))
 
     # Loads ImageNet pre-trained data
-    model.load_weights('imagenet_models/vgg16_weights.h5')
+    if K.image_dim_ordering() == 'th':
+      # Use pre-trained weights for Theano backend
+      weights_path = 'imagenet_models/vgg16_weights_th_dim_ordering_th_kernels.h5'
+    else:
+      # Use pre-trained weights for Tensorflow backend
+      weights_path = 'imagenet_models/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 
     # Truncate and replace softmax layer for transfer learning
     model.layers.pop()
