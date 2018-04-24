@@ -2,7 +2,7 @@
 
 from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
 from keras import backend as K
 
 from sklearn.metrics import log_loss
@@ -32,45 +32,45 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
     else:
         # for Tensorflow backend
         model.add(ZeroPadding2D((1, 1), input_shape=(img_rows, img_cols, channel)))
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation="relu"))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, 3, 3, activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, 3, 3, activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
+    model.add(Conv2D(256, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
+    model.add(Conv2D(512, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     # Add Fully Connected Layer
@@ -109,8 +109,8 @@ if __name__ == '__main__':
     img_rows, img_cols = 224, 224 # Resolution of inputs
     channel = 3
     num_classes = 10 
-    batch_size = 16 
-    nb_epoch = 10
+    batch_size = 16
+    epochs = 10
 
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
     X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # Start Fine-tuning
     model.fit(X_train, Y_train,
               batch_size=batch_size,
-              nb_epoch=nb_epoch,
+              epochs=epochs,
               shuffle=True,
               verbose=1,
               validation_data=(X_valid, Y_valid),

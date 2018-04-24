@@ -2,7 +2,8 @@
 
 from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, \
+    Reshape, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras import backend as K
@@ -10,6 +11,7 @@ from keras import backend as K
 from sklearn.metrics import log_loss
 
 from load_cifar10 import load_cifar10_data
+
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
     """
@@ -26,21 +28,22 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a')(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), name=conv_name_base + '2a')(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      border_mode='same', name=conv_name_base + '2b')(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+               padding='same', name=conv_name_base + '2b')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c')(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
     x = merge([x, input_tensor], mode='sum')
     x = Activation('relu')(x)
     return x
+
 
 def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2)):
     """
@@ -59,26 +62,27 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, subsample=strides,
-                      name=conv_name_base + '2a')(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), strides=strides,
+               name=conv_name_base + '2a')(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size, border_mode='same',
-                      name=conv_name_base + '2b')(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size), padding='same',
+               name=conv_name_base + '2b')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c')(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
-    shortcut = Convolution2D(nb_filter3, 1, 1, subsample=strides,
-                             name=conv_name_base + '1')(input_tensor)
+    shortcut = Conv2D(nb_filter3, (1, 1), strides=strides,
+                      name=conv_name_base + '1')(input_tensor)
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
 
     x = merge([x, shortcut], mode='sum')
     x = Activation('relu')(x)
     return x
+
 
 def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
     """
@@ -99,14 +103,14 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
     # Handle Dimension Ordering for different backends
     global bn_axis
     if K.image_dim_ordering() == 'tf':
-      bn_axis = 3
-      img_input = Input(shape=(img_rows, img_cols, color_type))
+        bn_axis = 3
+        img_input = Input(shape=(img_rows, img_cols, color_type))
     else:
-      bn_axis = 1
-      img_input = Input(shape=(color_type, img_rows, img_cols))
+        bn_axis = 1
+        img_input = Input(shape=(color_type, img_rows, img_cols))
 
     x = ZeroPadding2D((3, 3))(img_input)
-    x = Convolution2D(64, 7, 7, subsample=(2, 2), name='conv1')(x)
+    x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1')(x)
     x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)
     x = Activation('relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
@@ -141,11 +145,11 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
 
     # Load ImageNet pre-trained data 
     if K.image_dim_ordering() == 'th':
-      # Use pre-trained weights for Theano backend
-      weights_path = 'imagenet_models/resnet50_weights_th_dim_ordering_th_kernels.h5'
+        # Use pre-trained weights for Theano backend
+        weights_path = 'imagenet_models/resnet50_weights_th_dim_ordering_th_kernels.h5'
     else:
-      # Use pre-trained weights for Tensorflow backend
-      weights_path = 'imagenet_models/resnet50_weights_tf_dim_ordering_tf_kernels.h5'
+        # Use pre-trained weights for Tensorflow backend
+        weights_path = 'imagenet_models/resnet50_weights_tf_dim_ordering_tf_kernels.h5'
 
     model.load_weights(weights_path)
 
@@ -162,18 +166,18 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
     # Learning rate is changed to 0.001
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
-  
+
     return model
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # Example to fine-tune on 3000 samples from Cifar10
 
-    img_rows, img_cols = 224, 224 # Resolution of inputs
+    img_rows, img_cols = 224, 224  # Resolution of inputs
     channel = 3
-    num_classes = 10 
-    batch_size = 16 
-    nb_epoch = 10
+    num_classes = 10
+    batch_size = 16
+    epochs = 10
 
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
     X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
@@ -184,7 +188,7 @@ if __name__ == '__main__':
     # Start Fine-tuning
     model.fit(X_train, Y_train,
               batch_size=batch_size,
-              nb_epoch=nb_epoch,
+              epochs=epochs,
               shuffle=True,
               verbose=1,
               validation_data=(X_valid, Y_valid),
@@ -195,4 +199,3 @@ if __name__ == '__main__':
 
     # Cross-entropy loss score
     score = log_loss(Y_valid, predictions_valid)
-
