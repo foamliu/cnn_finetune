@@ -2,12 +2,14 @@
 
 from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, \
+    Reshape, Activation
 from keras import backend as K
 
 from sklearn.metrics import log_loss
 
 from load_cifar10 import load_cifar10_data
+
 
 def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
     """VGG 16 Model for Keras
@@ -75,11 +77,11 @@ def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
 
     # Loads ImageNet pre-trained data
     if K.image_dim_ordering() == 'th':
-      # Use pre-trained weights for Theano backend
-      weights_path = 'imagenet_models/vgg16_weights_th_dim_ordering_th_kernels.h5'
+        # Use pre-trained weights for Theano backend
+        weights_path = 'imagenet_models/vgg16_weights_th_dim_ordering_th_kernels.h5'
     else:
-      # Use pre-trained weights for Tensorflow backend
-      weights_path = 'imagenet_models/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+        # Use pre-trained weights for Tensorflow backend
+        weights_path = 'imagenet_models/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 
     # Truncate and replace softmax layer for transfer learning
     model.layers.pop()
@@ -88,7 +90,7 @@ def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
     model.add(Dense(num_classes, activation='softmax'))
 
     # Uncomment below to set the first 10 layers to non-trainable (weights will not be updated)
-    #for layer in model.layers[:10]:
+    # for layer in model.layers[:10]:
     #    layer.trainable = False
 
     # Learning rate is changed to 0.001
@@ -99,12 +101,11 @@ def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
 
 
 if __name__ == '__main__':
-
     # Example to fine-tune on 3000 samples from Cifar10
 
-    img_rows, img_cols = 224, 224 # Resolution of inputs
+    img_rows, img_cols = 224, 224  # Resolution of inputs
     channel = 3
-    num_classes = 10 
+    num_classes = 10
     batch_size = 16
     epochs = 10
 
@@ -128,4 +129,3 @@ if __name__ == '__main__':
 
     # Cross-entropy loss score
     score = log_loss(Y_valid, predictions_valid)
-

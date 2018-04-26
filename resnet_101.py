@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Flatten, merge, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras import backend as K
@@ -14,7 +13,9 @@ from custom_layers.scale_layer import Scale
 from load_cifar10 import load_cifar10_data
 
 import sys
+
 sys.setrecursionlimit(3000)
+
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
     '''The identity_block is the block that has no conv layer at shortcut
@@ -31,25 +32,26 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     scale_name_base = 'scale' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a', bias=False)(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), name=conv_name_base + '2a', use_bias=False)(input_tensor)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2a')(x)
     x = Activation('relu', name=conv_name_base + '2a_relu')(x)
 
     x = ZeroPadding2D((1, 1), name=conv_name_base + '2b_zeropadding')(x)
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      name=conv_name_base + '2b', bias=False)(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+               name=conv_name_base + '2b', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2b')(x)
     x = Activation('relu', name=conv_name_base + '2b_relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', bias=False)(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2c')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2c')(x)
 
     x = merge([x, input_tensor], mode='sum', name='res' + str(stage) + block)
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
+
 
 def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2)):
     '''conv_block is the block that has a conv layer at shortcut
@@ -68,31 +70,32 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     scale_name_base = 'scale' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, subsample=strides,
-                      name=conv_name_base + '2a', bias=False)(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), strides=strides,
+               name=conv_name_base + '2a', use_bias=False)(input_tensor)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2a')(x)
     x = Activation('relu', name=conv_name_base + '2a_relu')(x)
 
     x = ZeroPadding2D((1, 1), name=conv_name_base + '2b_zeropadding')(x)
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      name=conv_name_base + '2b', bias=False)(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+               name=conv_name_base + '2b', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2b')(x)
     x = Activation('relu', name=conv_name_base + '2b_relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', bias=False)(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2c')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2c')(x)
 
-    shortcut = Convolution2D(nb_filter3, 1, 1, subsample=strides,
-                             name=conv_name_base + '1', bias=False)(input_tensor)
+    shortcut = Conv2D(nb_filter3, (1, 1), strides=strides,
+                      name=conv_name_base + '1', use_bias=False)(input_tensor)
     shortcut = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '1')(shortcut)
     shortcut = Scale(axis=bn_axis, name=scale_name_base + '1')(shortcut)
 
     x = merge([x, shortcut], mode='sum', name='res' + str(stage) + block)
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
+
 
 def resnet101_model(img_rows, img_cols, color_type=1, num_classes=None):
     """
@@ -101,13 +104,13 @@ def resnet101_model(img_rows, img_cols, color_type=1, num_classes=None):
     Model Schema and layer naming follow that of the original Caffe implementation
     https://github.com/KaimingHe/deep-residual-networks
 
-    ImageNet Pretrained Weights 
+    ImageNet Pretrained Weights
     Theano: https://drive.google.com/file/d/0Byy2AcGyEVxfdUV1MHJhelpnSG8/view?usp=sharing
     TensorFlow: https://drive.google.com/file/d/0Byy2AcGyEVxfTmRRVmpGWDczaXM/view?usp=sharing
 
     Parameters:
       img_rows, img_cols - resolution of inputs
-      channel - 1 for grayscale, 3 for color 
+      channel - 1 for grayscale, 3 for color
       num_classes - number of class labels for our classification task
     """
     eps = 1.1e-5
@@ -115,14 +118,14 @@ def resnet101_model(img_rows, img_cols, color_type=1, num_classes=None):
     # Handle Dimension Ordering for different backends
     global bn_axis
     if K.image_dim_ordering() == 'tf':
-      bn_axis = 3
-      img_input = Input(shape=(img_rows, img_cols, color_type), name='data')
+        bn_axis = 3
+        img_input = Input(shape=(img_rows, img_cols, color_type), name='data')
     else:
-      bn_axis = 1
-      img_input = Input(shape=(color_type, img_rows, img_cols), name='data')
+        bn_axis = 1
+        img_input = Input(shape=(color_type, img_rows, img_cols), name='data')
 
     x = ZeroPadding2D((3, 3), name='conv1_zeropadding')(img_input)
-    x = Convolution2D(64, 7, 7, subsample=(2, 2), name='conv1', bias=False)(x)
+    x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name='bn_conv1')(x)
     x = Scale(axis=bn_axis, name='scale_conv1')(x)
     x = Activation('relu', name='conv1_relu')(x)
@@ -133,12 +136,12 @@ def resnet101_model(img_rows, img_cols, color_type=1, num_classes=None):
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
 
     x = conv_block(x, 3, [128, 128, 512], stage=3, block='a')
-    for i in range(1,4):
-      x = identity_block(x, 3, [128, 128, 512], stage=3, block='b'+str(i))
+    for i in range(1, 4):
+        x = identity_block(x, 3, [128, 128, 512], stage=3, block='b' + str(i))
 
     x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a')
-    for i in range(1,23):
-      x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b'+str(i))
+    for i in range(1, 23):
+        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b' + str(i))
 
     x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
     x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
@@ -151,11 +154,11 @@ def resnet101_model(img_rows, img_cols, color_type=1, num_classes=None):
     model = Model(img_input, x_fc)
 
     if K.image_dim_ordering() == 'th':
-      # Use pre-trained weights for Theano backend
-      weights_path = 'imagenet_models/resnet101_weights_th.h5'
+        # Use pre-trained weights for Theano backend
+        weights_path = 'imagenet_models/resnet101_weights_th.h5'
     else:
-      # Use pre-trained weights for Tensorflow backend
-      weights_path = 'imagenet_models/resnet101_weights_tf.h5'
+        # Use pre-trained weights for Tensorflow backend
+        weights_path = 'imagenet_models/resnet101_weights_tf.h5'
 
     model.load_weights(weights_path, by_name=True)
 
@@ -174,15 +177,15 @@ def resnet101_model(img_rows, img_cols, color_type=1, num_classes=None):
 
     return model
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # Example to fine-tune on 3000 samples from Cifar10
 
-    img_rows, img_cols = 224, 224 # Resolution of inputs
+    img_rows, img_cols = 224, 224  # Resolution of inputs
     channel = 3
-    num_classes = 10 
-    batch_size = 16 
-    nb_epoch = 10
+    num_classes = 10
+    batch_size = 16
+    epochs = 10
 
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
     X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
@@ -193,7 +196,7 @@ if __name__ == '__main__':
     # Start Fine-tuning
     model.fit(X_train, Y_train,
               batch_size=batch_size,
-              nb_epoch=nb_epoch,
+              epochs=epochs,
               shuffle=True,
               verbose=1,
               validation_data=(X_valid, Y_valid),

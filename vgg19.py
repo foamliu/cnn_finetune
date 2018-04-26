@@ -2,12 +2,14 @@
 
 from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, \
+    Reshape, Activation
 from keras import backend as K
 
 from sklearn.metrics import log_loss
 
 from load_cifar10 import load_cifar10_data
+
 
 def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
     """
@@ -24,7 +26,7 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
       channel - 1 for grayscale, 3 for color 
       num_classes - number of class labels for our classification task
     """
-  
+
     model = Sequential()
     if K.image_dim_ordering() == 'th':
         # for Theano backend
@@ -33,45 +35,45 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
         # for Tensorflow backend
         model.add(ZeroPadding2D((1, 1), input_shape=(img_rows, img_cols, channel)))
     model.add(Conv2D(64, (3, 3), activation="relu"))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(256, (3, 3), activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
+    model.add(ZeroPadding2D((1, 1)))
     model.add(Conv2D(512, (3, 3), activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
     # Add Fully Connected Layer
     model.add(Flatten())
@@ -83,11 +85,11 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
 
     # Loads ImageNet pre-trained data
     if K.image_dim_ordering() == 'th':
-      # Use pre-trained weights for Theano backend
-      weights_path = 'imagenet_models/vgg19_weights_th_dim_ordering_th_kernels.h5'
+        # Use pre-trained weights for Theano backend
+        weights_path = 'imagenet_models/vgg19_weights_th_dim_ordering_th_kernels.h5'
     else:
-      # Use pre-trained weights for Tensorflow backend
-      weights_path = 'imagenet_models/vgg19_weights_tf_dim_ordering_tf_kernels.h5'
+        # Use pre-trained weights for Tensorflow backend
+        weights_path = 'imagenet_models/vgg19_weights_tf_dim_ordering_tf_kernels.h5'
 
     # Truncate and replace softmax layer for transfer learning
     model.layers.pop()
@@ -103,12 +105,11 @@ def vgg19_model(img_rows, img_cols, channel=1, num_classes=None):
 
 
 if __name__ == '__main__':
-
     # Example to fine-tune on 3000 samples from Cifar10
 
-    img_rows, img_cols = 224, 224 # Resolution of inputs
+    img_rows, img_cols = 224, 224  # Resolution of inputs
     channel = 3
-    num_classes = 10 
+    num_classes = 10
     batch_size = 16
     epochs = 10
 
@@ -132,4 +133,3 @@ if __name__ == '__main__':
 
     # Cross-entropy loss score
     score = log_loss(Y_valid, predictions_valid)
-
