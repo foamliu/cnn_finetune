@@ -83,6 +83,8 @@ def vgg16_model(img_rows, img_cols, channel=1, num_classes=None):
         # Use pre-trained weights for Tensorflow backend
         weights_path = 'imagenet_models/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 
+    model.load_weights(weights_path)
+
     # Truncate and replace softmax layer for transfer learning
     model.layers.pop()
     model.outputs = [model.layers[-1].output]
